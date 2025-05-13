@@ -203,10 +203,10 @@ public struct Examples {
             strategy: .clearInstructions
         )
         
-        // Create request options for each provider
-        let openAIOptions = RequestOptions(model: "gpt-4")
-        let anthropicOptions = RequestOptions(model: "claude-3-opus-20240229")
-        let googleOptions = RequestOptions(model: "gemini-pro")
+        // Create request options for each provider using the enum model list
+        let openAIOptions = RequestOptions(model: AIModel.OpenAI.gpt4)
+        let anthropicOptions = RequestOptions(model: AIModel.Anthropic.claude3Opus)
+        let googleOptions = RequestOptions(model: AIModel.Google.geminiPro)
         
         do {
             // Send the prompt to each provider

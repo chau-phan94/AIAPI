@@ -1,0 +1,15 @@
+{
+  "originHash" : "6e58657cdb5ef6927bdae4aa87aee40b71b383285a81b124fb5271ffbd8130f5",
+  "pins" : [
+    {
+      "identity" : "aiapi",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:chau-phan94/AIAPI.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "4d2f6e41470546e0d444939f16e144f2287ee9f3"
+      }
+    }
+  ],
+  "version" : 3
+}

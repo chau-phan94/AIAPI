@@ -81,7 +81,7 @@ public struct RequestOptions {
     /// The temperature to use for generation
     public let temperature: Double?
     
-    /// The model to use
+    /// The model to use (string identifier)
     public let model: String?
     
     /// Additional parameters specific to the provider
@@ -91,13 +91,43 @@ public struct RequestOptions {
     /// - Parameters:
     ///   - maxTokens: The maximum number of tokens to generate
     ///   - temperature: The temperature to use for generation
-    ///   - model: The model to use
+    ///   - model: The model to use (string identifier)
     ///   - additionalParameters: Additional parameters specific to the provider
     public init(maxTokens: Int? = nil, temperature: Double? = nil, model: String? = nil, additionalParameters: [String: Any] = [:]) {
         self.maxTokens = maxTokens
         self.temperature = temperature
         self.model = model
         self.additionalParameters = additionalParameters
+    }
+    
+    /// Creates new request options with an OpenAI model
+    /// - Parameters:
+    ///   - model: The OpenAI model to use
+    ///   - maxTokens: The maximum number of tokens to generate
+    ///   - temperature: The temperature to use for generation
+    ///   - additionalParameters: Additional parameters specific to the provider
+    public init(model: AIModel.OpenAI, maxTokens: Int? = nil, temperature: Double? = nil, additionalParameters: [String: Any] = [:]) {
+        self.init(maxTokens: maxTokens, temperature: temperature, model: model.identifier, additionalParameters: additionalParameters)
+    }
+    
+    /// Creates new request options with an Anthropic model
+    /// - Parameters:
+    ///   - model: The Anthropic model to use
+    ///   - maxTokens: The maximum number of tokens to generate
+    ///   - temperature: The temperature to use for generation
+    ///   - additionalParameters: Additional parameters specific to the provider
+    public init(model: AIModel.Anthropic, maxTokens: Int? = nil, temperature: Double? = nil, additionalParameters: [String: Any] = [:]) {
+        self.init(maxTokens: maxTokens, temperature: temperature, model: model.identifier, additionalParameters: additionalParameters)
+    }
+    
+    /// Creates new request options with a Google model
+    /// - Parameters:
+    ///   - model: The Google model to use
+    ///   - maxTokens: The maximum number of tokens to generate
+    ///   - temperature: The temperature to use for generation
+    ///   - additionalParameters: Additional parameters specific to the provider
+    public init(model: AIModel.Google, maxTokens: Int? = nil, temperature: Double? = nil, additionalParameters: [String: Any] = [:]) {
+        self.init(maxTokens: maxTokens, temperature: temperature, model: model.identifier, additionalParameters: additionalParameters)
     }
 }
 

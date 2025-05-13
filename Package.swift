@@ -5,6 +5,10 @@ import PackageDescription
 
 let package = Package(
     name: "AIAPI",
+    platforms: [
+        .iOS(.v13),
+        .macOS(.v13)
+    ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
@@ -20,5 +24,6 @@ let package = Package(
             name: "AIAPITests",
             dependencies: ["AIAPI"]
         ),
-    ]
+    ],
+    swiftLanguageVersions: [.v5] // Specify the Swift language version
 )

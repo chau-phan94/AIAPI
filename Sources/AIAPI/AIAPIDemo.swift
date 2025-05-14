@@ -1,5 +1,8 @@
 // AIAPIDemo - A demonstration of how to use the AIAPI library
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// A demonstration of how to use the AIAPI library in a real-world application
 public struct AIAPIDemo {
@@ -33,8 +36,9 @@ public struct AIAPIDemo {
         
         // Set options optimized for code generation
         let options = RequestOptions(
+            model: AIModel.OpenAI.gpt4Turbo,
             temperature: 0.2,  // Lower temperature for more deterministic code
-            model: "gpt-4"     // Use GPT-4 for better code quality
+            additionalParameters: ["response_format": ["type": "text"]]
         )
         
         // Send the prompt
@@ -79,8 +83,8 @@ public struct AIAPIDemo {
         
         // Set options optimized for classification
         let options = RequestOptions(
-            temperature: 0.0,  // Zero temperature for deterministic classification
-            model: "claude-3-sonnet-20240229"  // Use a smaller, faster model for simple tasks
+            model: AIModel.Anthropic.claude3Sonnet,
+            temperature: 0.0  // Zero temperature for deterministic classification
         )
         
         // Send the prompt
@@ -118,8 +122,8 @@ public struct AIAPIDemo {
         
         // Set options optimized for creative writing
         let options = RequestOptions(
-            temperature: 0.8,  // Higher temperature for more creative outputs
-            model: "gemini-pro"
+            model: AIModel.Google.geminiPro,
+            temperature: 0.8  // Higher temperature for more creative outputs
         )
         
         // Send the prompt
@@ -154,9 +158,9 @@ public struct AIAPIDemo {
         
         // Set options optimized for research
         let options = RequestOptions(
+            model: AIModel.OpenAI.gpt4Turbo,
             maxTokens: 1000,
-            temperature: 0.3,
-            model: "gpt-4"
+            temperature: 0.3
         )
         
         // Send the prompt and await the response
@@ -177,10 +181,10 @@ public struct AIAPIDemo {
         // Create a standard prompt
         let prompt = Prompt(content: question)
         
-        // Standard options for all providers
-        let openAIOptions = RequestOptions(model: "gpt-4")
-        let anthropicOptions = RequestOptions(model: "claude-3-opus-20240229")
-        let googleOptions = RequestOptions(model: "gemini-pro")
+        /// Standard options for all providers
+        let openAIOptions = RequestOptions(model: AIModel.OpenAI.gpt4Turbo.identifier)
+        let anthropicOptions = RequestOptions(model: AIModel.Anthropic.claude3Opus.identifier)
+        let googleOptions = RequestOptions(model: AIModel.Google.geminiPro.identifier)
         
         // Track responses
         var responses: [String: String] = [:]
@@ -229,6 +233,146 @@ public struct AIAPIDemo {
                 completion(.failure(errors.first!))
             } else {
                 completion(.success(responses))
+            }
+        }
+    }
+    
+    /// Demonstrates how to generate an image using DALL-E through OpenAI
+    /// - Parameters:
+    ///   - prompt: The description of the image to generate
+    ///   - size: The size of the image (e.g., "1024x1024")
+    ///   - completion: Callback with the result containing image URL or error
+    public func generateImage(prompt: String, size: String = "1024x1024", completion: @escaping (Result<String, Error>) -> Void) {
+        // Create a client for OpenAI
+        let client = aiapi.createClient(provider: .openAI)
+        
+        // Create a prompt for image generation
+        let imagePrompt = Prompt(
+            content: prompt,
+            strategy: .clearInstructions
+        )
+        
+        // Set options for image generation
+        let options = RequestOptions(
+            additionalParameters: [
+                "endpoint": "images/generations",
+                "size": size,
+                "n": 1,
+                "response_format": "url"
+            ]
+        )
+        
+        // Send the prompt
+        client.sendPrompt(imagePrompt, options: options) { result in
+            switch result {
+            case .success(let response):
+                if let imageUrl = response.metadata["image_url"] as? String {
+                    completion(.success(imageUrl))
+                } else {
+                    completion(.failure(AIClientError.invalidResponse))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Demonstrates how to use streaming responses with OpenAI
+    /// - Parameters:
+    ///   - prompt: The prompt to send
+    ///   - chunkHandler: Handler for each chunk of the response
+    ///   - completion: Callback when the stream is complete
+    @available(macOS 10.15, iOS 13.0, *)
+    public func streamResponse(prompt: String, chunkHandler: @escaping (String) -> Void, completion: @escaping (Result<Void, Error>) -> Void) {
+        // Create a client for OpenAI
+        let client = aiapi.createClient(provider: .openAI)
+        
+        // Create a simple prompt
+        let streamPrompt = Prompt(content: prompt)
+        
+        // Set options for streaming
+        let options = RequestOptions(
+            model: AIModel.OpenAI.gpt4Turbo,
+            additionalParameters: [
+                "stream": true,
+                "onChunk": { (chunk: String) in
+                    chunkHandler(chunk)
+                }
+            ]
+        )
+        
+        // Send the prompt with streaming
+        client.sendPrompt(streamPrompt, options: options) { result in
+            switch result {
+            case .success(_):
+                completion(.success(()))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Demonstrates how to use function calling with OpenAI
+    /// - Parameters:
+    ///   - query: The user query that might trigger a function call
+    ///   - completion: Callback with the result
+    public func demonstrateFunctionCalling(query: String, completion: @escaping (Result<String, Error>) -> Void) {
+        // Create a client for OpenAI
+        let client = aiapi.createClient(provider: .openAI)
+        
+        // Define available functions
+        let functions = [
+            [
+                "name": "get_weather",
+                "description": "Get the current weather in a given location",
+                "parameters": [
+                    "type": "object",
+                    "properties": [
+                        "location": [
+                            "type": "string",
+                            "description": "The city and state, e.g. San Francisco, CA"
+                        ],
+                        "unit": [
+                            "type": "string",
+                            "enum": ["celsius", "fahrenheit"]
+                        ]
+                    ],
+                    "required": ["location"]
+                ]
+            ]
+        ]
+        
+        // Create a prompt
+        let functionPrompt = Prompt(content: query)
+        
+        // Set options with function calling
+        let options = RequestOptions(
+            model: AIModel.OpenAI.gpt4Turbo,
+            additionalParameters: [
+                "functions": functions,
+                "function_call": "auto"
+            ]
+        )
+        
+        // Send the prompt
+        client.sendPrompt(functionPrompt, options: options) { result in
+            switch result {
+            case .success(let response):
+                // Check if a function was called
+                if let functionCall = response.metadata["function_call"] as? [String: Any],
+                   let functionName = functionCall["name"] as? String,
+                   let arguments = functionCall["arguments"] as? String {
+                    
+                    // In a real implementation, you would call the actual function here
+                    // For this demo, we'll just return information about the function call
+                    let result = "Function called: \(functionName) with arguments: \(arguments)"
+                    completion(.success(result))
+                } else {
+                    // No function was called, just return the response
+                    completion(.success(response.content))
+                }
+            case .failure(let error):
+                completion(.failure(error))
             }
         }
     }
